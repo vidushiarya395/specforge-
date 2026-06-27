@@ -12,9 +12,9 @@ from .utils import extract_json, logger
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
-MODEL_NAME = "gemini-2.5-flash-lite"
+MODEL_NAME = "gemini-2.5-flash"
 MAX_RETRIES = 3
-RETRY_DELAY = 2
+RETRY_DELAY = 5
 
 
 class OrchestratorSchema(BaseModel):
@@ -80,6 +80,32 @@ Required JSON structure:
 
 def validate_response(raw_text: str) -> Dict[str, Any]:
     parsed = extract_json(raw_text)
+    
+    # Fix functional_requirements if returned as objects
+    if "functional_requirements" in parsed:
+        fixed = []
+        for item in parsed["functional_requirements"]:
+            if isinstance(item, dict):
+                fixed.append(item.get("description", str(item)))
+            else:
+                fixed.append(str(item))
+        parsed["functional_requirements"] = fixed
+
+    # Fix non_functional_requirements if returned as objects
+    if "non_functional_requirements" in parsed:
+        fixed = []
+        for item in parsed["non_functional_requirements"]:
+            if isinstance(item, dict):
+                fixed.append(item.get("description", str(item)))
+            else:
+                fixed.append(str(item))
+        parsed["non_functional_requirements"] = fixed
+
+    # Fix mvp_scope if returned as object instead of list
+    if "mvp_scope" in parsed and isinstance(parsed["mvp_scope"], dict):
+        core = parsed["mvp_scope"].get("core_features", [])
+        parsed["mvp_scope"] = core
+
     validated = OrchestratorSchema(**parsed)
     validated.project_viability = validated.project_viability.lower().strip()
     allowed = {"high", "medium", "low", "very_low"}
@@ -101,7 +127,7 @@ def generate_analysis(client: genai.Client, user_message: str) -> Dict[str, Any]
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_PROMPT,
                     temperature=0,
-                    max_output_tokens=4000,
+                    max_output_tokens=8000,
                 )
             )
 
@@ -137,11 +163,19 @@ def orchestrator_node(state: SpecForgeState) -> SpecForgeState:
         if not idea:
             raise ValueError("No product idea provided")
 
+        from backend.rag.setup import get_relevant_context
+        rag_context = get_relevant_context(
+            f"software requirements specification SRS template product specification for: {idea}"
+        )
+
         user_message = f"""
 You are the final synthesis agent. Based on all agent analyses below, create a complete product specification.
 
 PRODUCT IDEA:
 {idea}
+
+REFERENCE CONTEXT:
+{rag_context}
 
 BUSINESS ANALYSIS:
 {json.dumps(state.get("business_analysis"), indent=2)}

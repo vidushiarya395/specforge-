@@ -12,9 +12,9 @@ from .utils import extract_json, logger
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
-MODEL_NAME = "gemini-2.5-flash-lite"
+MODEL_NAME = "gemini-2.5-flash"
 MAX_RETRIES = 3
-RETRY_DELAY = 2
+RETRY_DELAY = 5
 
 
 class BusinessAnalysisSchema(BaseModel):
@@ -73,6 +73,7 @@ def validate_response(raw_text: str) -> Dict[str, Any]:
         validated.verdict = "needs_clarification"
     return validated.model_dump()
 
+
 def generate_analysis(client: genai.Client, user_message: str) -> Dict[str, Any]:
     last_error = None
     for attempt in range(1, MAX_RETRIES + 1):
@@ -127,11 +128,20 @@ def business_analyst_node(state: SpecForgeState) -> SpecForgeState:
         if not idea:
             raise ValueError("No product idea provided")
 
+        from backend.rag.setup import get_relevant_context
+
+        rag_context = get_relevant_context(
+            f"business scalability SaaS monetization market feasibility for: {idea}"
+        )
+
         user_message = f"""
 Analyse this product idea from a business strategy perspective.
 
 PRODUCT IDEA:
 {idea}
+
+REFERENCE CONTEXT:
+{rag_context}
 
 Focus on:
 - market viability
@@ -142,6 +152,7 @@ Focus on:
 
 Return ONLY valid JSON.
 """
+
         analysis = generate_analysis(client, user_message)
         state["business_analysis"] = analysis
         state["business_analysis_status"] = "success"

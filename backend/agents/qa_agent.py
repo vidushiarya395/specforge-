@@ -12,9 +12,9 @@ from .utils import extract_json, logger
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
-MODEL_NAME = "gemini-2.5-flash-lite"
+MODEL_NAME = "gemini-2.5-flash"
 MAX_RETRIES = 3
-RETRY_DELAY = 2
+RETRY_DELAY = 5
 
 
 class QAAnalysisSchema(BaseModel):
@@ -125,11 +125,19 @@ def qa_node(state: SpecForgeState) -> SpecForgeState:
         if not idea:
             raise ValueError("No product idea provided")
 
+        from backend.rag.setup import get_relevant_context
+        rag_context = get_relevant_context(
+            f"software testing QA strategy edge cases failure scenarios for: {idea}"
+        )
+
         user_message = f"""
 Analyse this product idea from a QA and testing perspective.
 
 PRODUCT IDEA:
 {idea}
+
+REFERENCE CONTEXT:
+{rag_context}
 
 Focus on:
 - critical test areas

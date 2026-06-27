@@ -1,0 +1,63 @@
+SAAS ARCHITECTURE PATTERNS AND BEST PRACTICES
+
+1. MULTI-TENANCY
+- Single instance serves multiple customers
+- Data isolation between tenants is critical
+- Approaches: separate databases, shared database with tenant ID
+- Always filter queries by tenant ID to prevent data leaks
+
+2. API DESIGN
+- RESTful APIs with versioning (e.g. /api/v1/)
+- Use JWT tokens for authentication
+- Rate limiting to prevent abuse
+- Pagination for large data sets
+- Consistent error response format
+
+3. AUTHENTICATION & AUTHORIZATION
+- OAuth 2.0 for third party login
+- JWT for stateless authentication
+- Role based access control (RBAC)
+- Refresh tokens for long sessions
+- Never store passwords in plain text, use bcrypt
+
+4. DATABASE PATTERNS
+- Use connection pooling
+- Read replicas for heavy read workloads
+- Database indexing for frequently queried fields
+- Soft deletes instead of hard deletes
+- Always backup data regularly
+
+5. SCALABILITY PATTERNS
+- Horizontal scaling over vertical scaling
+- Load balancers to distribute traffic
+- Caching layer (Redis) for frequent queries
+- Async task queues for heavy operations
+- CDN for static assets
+
+6. MICROSERVICES VS MONOLITH
+- Start with monolith for MVP
+- Split into microservices when scaling becomes an issue
+- Use message queues for service communication
+- Each service should have its own database
+
+7. MONITORING & OBSERVABILITY
+- Centralized logging (e.g. ELK stack)
+- Error tracking (e.g. Sentry)
+- Performance monitoring
+- Uptime monitoring and alerts
+- Track key business metrics
+
+8. SECURITY BEST PRACTICES
+- HTTPS everywhere
+- Input validation on all endpoints
+- SQL injection prevention
+- CORS configuration
+- Environment variables for secrets
+- Regular security audits
+
+9. DEPLOYMENT
+- CI/CD pipelines for automated deployment
+- Docker containers for consistency
+- Environment separation (dev, staging, production)
+- Blue-green deployments for zero downtime
+- Infrastructure as code

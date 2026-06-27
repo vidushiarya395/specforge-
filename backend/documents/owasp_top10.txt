@@ -1,0 +1,41 @@
+OWASP TOP 10 SECURITY RISKS
+
+1. BROKEN ACCESS CONTROL
+- Users acting outside intended permissions
+- Mitigation: Implement proper authorization checks, deny by default
+
+2. CRYPTOGRAPHIC FAILURES
+- Weak encryption, sensitive data exposed
+- Mitigation: Use strong encryption (AES-256), HTTPS everywhere, never store plain text passwords
+
+3. INJECTION
+- SQL injection, NoSQL injection, command injection
+- Mitigation: Use parameterized queries, input validation, ORM frameworks
+
+4. INSECURE DESIGN
+- Missing security controls in design phase
+- Mitigation: Threat modeling, secure design patterns, security requirements
+
+5. SECURITY MISCONFIGURATION
+- Default credentials, unnecessary features enabled, missing patches
+- Mitigation: Hardened configurations, disable unused features, regular patching
+
+6. VULNERABLE COMPONENTS
+- Using libraries with known vulnerabilities
+- Mitigation: Regular dependency updates, vulnerability scanning
+
+7. AUTHENTICATION FAILURES
+- Weak passwords, missing MFA, insecure session management
+- Mitigation: Strong password policies, MFA, secure session tokens
+
+8. SOFTWARE INTEGRITY FAILURES
+- Untrusted code, insecure CI/CD pipeline
+- Mitigation: Code signing, verified dependencies, secure pipelines
+
+9. LOGGING FAILURES
+- Missing logs, no monitoring, no alerting
+- Mitigation: Comprehensive logging, real-time monitoring, incident response plan
+
+10. SERVER SIDE REQUEST FORGERY (SSRF)
+- Server making requests to unintended locations
+- Mitigation: Validate and sanitize all user-supplied URLs, allowlist external services

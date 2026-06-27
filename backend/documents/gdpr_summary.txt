@@ -1,0 +1,42 @@
+GDPR - GENERAL DATA PROTECTION REGULATION SUMMARY
+
+WHAT IS GDPR:
+EU law that protects personal data and privacy of individuals.
+Applies to any product that handles data of EU citizens.
+
+KEY PRINCIPLES:
+1. LAWFULNESS - Must have legal basis to process data
+2. PURPOSE LIMITATION - Collect data only for specific purposes
+3. DATA MINIMISATION - Collect only what is necessary
+4. ACCURACY - Keep data accurate and up to date
+5. STORAGE LIMITATION - Don't keep data longer than needed
+6. INTEGRITY & CONFIDENTIALITY - Protect data with security measures
+
+USER RIGHTS UNDER GDPR:
+- Right to access their data
+- Right to delete their data (right to be forgotten)
+- Right to correct inaccurate data
+- Right to data portability
+- Right to withdraw consent
+
+CONSENT REQUIREMENTS:
+- Must be freely given, specific, informed
+- Must be as easy to withdraw as to give
+- Pre-ticked boxes are NOT valid consent
+- Separate consent for each purpose
+
+DATA BREACH REQUIREMENTS:
+- Must notify authorities within 72 hours
+- Must notify affected users without undue delay
+- Must keep records of all breaches
+
+PENALTIES:
+- Up to 4% of global annual revenue
+- Or 20 million euros, whichever is higher
+
+COMMON GDPR VIOLATIONS IN APPS:
+- No privacy policy
+- Tracking users without consent
+- Storing passwords in plain text
+- Sharing user data with third parties without consent
+- Not allowing users to delete their accounts
