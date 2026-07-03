@@ -1,65 +1,184 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
+const AGENTS = [
+  { key: "business",     label: "Business Analyst",  color: "#818cf8" },
+  { key: "developer",    label: "Senior Developer",   color: "#38bdf8" },
+  { key: "qa",           label: "QA Engineer",        color: "#fb923c" },
+  { key: "security",     label: "Security Engineer",  color: "#f43f5e" },
+  { key: "ux",           label: "UX Researcher",      color: "#a78bfa" },
+  { key: "orchestrator", label: "Final Spec",         color: "#34d399" },
+];
+
+const KEY_MAP = {
+  business:     "business_analysis",
+  developer:    "dev_concerns",
+  qa:           "qa_concerns",
+  security:     "security_concerns",
+  ux:           "ux_concerns",
+  orchestrator: "final_spec",
+};
 
 export default function Home() {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [idea, setIdea] = useState("");
+  const [phase, setPhase] = useState("idle");
+  const [results, setResults] = useState({});
+  const [error, setError] = useState(null);
+  const [activeAgent, setActiveAgent] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.push("/login");
+      else setUser(session.user);
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
+  const handleSubmit = async () => {
+    if (!idea.trim() || phase === "running") return;
+    setPhase("running");
+    setResults({});
+    setError(null);
+    setActiveAgent(null);
+
+    try {
+      const res = await fetch(`${BACKEND}/generate-spec`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea }),
+      });
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+
+      // Animate results appearing one by one
+      for (const agent of AGENTS) {
+        setActiveAgent(agent.key);
+        await new Promise(r => setTimeout(r, 500));
+        setResults(prev => ({
+          ...prev,
+          [agent.key]: data[KEY_MAP[agent.key]]
+        }));
+      }
+
+      setPhase("done");
+      setActiveAgent(null);
+
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+      setPhase("idle");
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "white", fontFamily: "sans-serif" }}>
+
+      {/* Navbar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 32px", borderBottom: "1px solid #222" }}>
+        <h1 style={{ margin: 0, fontSize: "20px", color: "#34d399" }}>⚡ SpecForge</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <span style={{ color: "#888", fontSize: "14px" }}>{user?.email}</span>
+          <button onClick={handleLogout} style={{ padding: "6px 14px", borderRadius: "6px", background: "#1a1a1a", color: "#888", border: "1px solid #333", cursor: "pointer" }}>
+            Logout
+          </button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* Main content */}
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "40px 20px" }}>
+
+        {/* Hero */}
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+          <h2 style={{ fontSize: "36px", fontWeight: "bold", marginBottom: "10px" }}>
+            Turn your idea into a <span style={{ color: "#34d399" }}>product spec</span>
+          </h2>
+          <p style={{ color: "#888", fontSize: "16px" }}>6 AI agents analyse your idea from every angle</p>
         </div>
-      </main>
+
+        {/* Input */}
+        <div style={{ marginBottom: "32px" }}>
+          <textarea
+            value={idea}
+            onChange={(e) => setIdea(e.target.value)}
+            placeholder="Describe your product idea... e.g. An app that helps students find study partners near them using AI matching"
+            rows={4}
+            style={{ width: "100%", padding: "16px", borderRadius: "8px", background: "#111", border: "1px solid #333", color: "white", fontSize: "15px", resize: "none", boxSizing: "border-box" }}
+          />
+          <button
+            onClick={handleSubmit}
+            disabled={phase === "running" || !idea.trim()}
+            style={{ marginTop: "12px", width: "100%", padding: "14px", borderRadius: "8px", background: phase === "running" ? "#1a1a1a" : "#34d399", color: phase === "running" ? "#888" : "#000", border: "none", fontSize: "16px", fontWeight: "bold", cursor: phase === "running" ? "not-allowed" : "pointer" }}
+          >
+            {phase === "running" ? "Analysing your idea..." : "Generate Spec"}
+          </button>
+        </div>
+
+        {/* Error */}
+        {error && <p style={{ color: "#f43f5e", marginBottom: "20px" }}>{error}</p>}
+
+        {/* Agent cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+          {AGENTS.map(agent => (
+            <div key={agent.key} style={{
+              background: "#111",
+              border: `1px solid ${activeAgent === agent.key ? agent.color : "#222"}`,
+              borderRadius: "10px",
+              padding: "20px",
+              transition: "border 0.3s"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: results[agent.key] ? agent.color : activeAgent === agent.key ? agent.color : "#333" }} />
+                <span style={{ fontWeight: "bold", color: results[agent.key] ? agent.color : activeAgent === agent.key ? agent.color : "#888" }}>
+                  {agent.label}
+                </span>
+                {activeAgent === agent.key && <span style={{ color: "#888", fontSize: "12px" }}>running...</span>}
+                {results[agent.key] && <span style={{ color: "#34d399", fontSize: "12px" }}>✓ done</span>}
+              </div>
+
+              {results[agent.key] && (
+                <div style={{ fontSize: "13px", color: "#aaa" }}>
+                  {results[agent.key].verdict && (
+                    <p style={{ color: agent.color, marginBottom: "6px" }}>Verdict: {results[agent.key].verdict}</p>
+                  )}
+                  {results[agent.key].recommendation && (
+                    <p style={{ lineHeight: "1.5" }}>{results[agent.key].recommendation}</p>
+                  )}
+                  {results[agent.key].final_recommendation && (
+                    <p style={{ lineHeight: "1.5" }}>{results[agent.key].final_recommendation}</p>
+                  )}
+                </div>
+              )}
+
+              {!results[agent.key] && phase === "idle" && (
+                <p style={{ color: "#444", fontSize: "13px" }}>Waiting for idea...</p>
+              )}
+
+              {!results[agent.key] && phase === "running" && activeAgent !== agent.key && (
+                <p style={{ color: "#444", fontSize: "13px" }}>Queued...</p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Done message */}
+        {phase === "done" && (
+          <div style={{ marginTop: "32px", padding: "20px", background: "#0d1f17", border: "1px solid #34d399", borderRadius: "10px", textAlign: "center" }}>
+            <p style={{ color: "#34d399", fontSize: "18px", fontWeight: "bold" }}>✓ Specification Complete!</p>
+            <p style={{ color: "#888", marginTop: "8px" }}>All 6 agents have analysed your idea successfully.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
