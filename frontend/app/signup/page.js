@@ -34,7 +34,7 @@ export default function Signup() {
     return (
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#0a0a0a" }}>
             <form onSubmit={handleSignup} style={{ background: "#111", padding: "40px", borderRadius: "12px", width: "350px" }}>
-                <h1 style={{ color: "white", marginBottom: "20px" }}>Create Account</h1>
+                <h1 style={{ color: "white", marginBottom: "20px" }}>Join IdeaLens</h1>
 
                 {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>}
                 {success && <p style={{ color: "#4ade80", marginBottom: "10px" }}>Check your email to confirm your account!</p>}
