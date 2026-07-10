@@ -19,12 +19,18 @@ from backend.agents.ux_agent import ux_node
 from backend.agents.orchestrator_agent import orchestrator_node
 from backend.agents.pipeline import spec_pipeline
 from backend.database.db import save_project, save_specification
+from backend.rag.setup import setup_vector_store
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(title="SpecForge API", version="1.0.0")
+
+
+@app.on_event("startup")
+def bootstrap_vector_store():
+    setup_vector_store()
 
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
