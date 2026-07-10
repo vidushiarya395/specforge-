@@ -267,6 +267,7 @@ function downloadReport(idea, results) {
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [idea, setIdea] = useState("");
   const [phase, setPhase] = useState("idle");
   const [statuses, setStatuses] = useState({});
@@ -288,7 +289,10 @@ export default function Home() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       if (!session) router.push("/login");
-      else setUser(session.user);
+      else {
+        setUser(session.user);
+        setAuthChecked(true);
+      }
     });
     return () => { mounted = false; };
   }, []);
@@ -394,6 +398,10 @@ export default function Home() {
     await supabase.auth.signOut();
     router.push("/login");
   };
+
+  if (!authChecked) {
+    return <div style={{ minHeight: "100vh", background: "#05050f" }} />;
+  }
 
   return (
     <>
