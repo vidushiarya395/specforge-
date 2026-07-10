@@ -275,10 +275,13 @@ export default function Home() {
   const currentAgent = AGENTS.find(a => statuses[a.key] === "running");
 
   useEffect(() => {
+    let mounted = true;
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       if (!session) router.push("/login");
       else setUser(session.user);
     });
+    return () => { mounted = false; };
   }, []);
 
   const startProgress = () => {
@@ -310,33 +313,55 @@ export default function Home() {
     startProgress();
 
     try {
-      const res = await fetch(`${BACKEND}/generate-spec`, {
+      const res = await fetch(`${BACKEND}/generate-spec-stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idea }),
       });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const data = await res.json();
 
-      for (let i = 0; i < AGENTS.length; i++) {
-        const agent = AGENTS[i];
-        const next = AGENTS[i + 1];
-        setStatuses(prev => ({ ...prev, [agent.key]: "running" }));
-        await new Promise(r => setTimeout(r, 600));
-        setResults(prev => {
-          const updated = { ...prev, [agent.key]: data[KEY_MAP[agent.key]] };
-          if (i === 0) setActive(agent.key);
-          return updated;
-        });
-        setStatuses(prev => ({ ...prev, [agent.key]: "done" }));
-        if (next) {
-          await new Promise(r => setTimeout(r, 200));
-          setStatuses(prev => ({ ...prev, [next.key]: "running" }));
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const json = line.replace("data: ", "").trim();
+          if (!json) continue;
+
+          try {
+            const event = JSON.parse(json);
+
+            if (event.type === "status") {
+              setStatuses(prev => ({ ...prev, [event.agent]: "running" }));
+            }
+
+            if (event.type === "result") {
+              setResults(prev => {
+                const updated = { ...prev, [event.agent]: event.data };
+                if (Object.keys(updated).length === 1) setActive(event.agent);
+                return updated;
+              });
+              setStatuses(prev => ({ ...prev, [event.agent]: "done" }));
+            }
+
+            if (event.type === "done") {
+              stopProgress();
+              setPhase("done");
+            }
+
+          } catch (e) {
+            // skip malformed events
+          }
         }
       }
-
-      stopProgress();
-      setPhase("done");
 
     } catch (err) {
       stopProgress();
@@ -364,7 +389,7 @@ export default function Home() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+        
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #05050f; font-family: 'Inter', sans-serif; }
         ::-webkit-scrollbar { width: 4px; }
