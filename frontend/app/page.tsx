@@ -204,6 +204,15 @@ function AgentOutput({ data }) {
   );
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function downloadReport(idea, results) {
   const lines = [];
   lines.push(`<html><head><meta charset="UTF-8"><style>
@@ -218,7 +227,7 @@ function downloadReport(idea, results) {
     .rec-box { background: #f9fafb; border-left: 4px solid #9ca3af; padding: 12px 16px; border-radius: 4px; margin-bottom: 12px; font-size: 13px; color: #4b5563; }
   </style></head><body>`);
   lines.push(`<h1>IdeaLens — Software Requirements Specification</h1>`);
-  lines.push(`<p><strong>Idea:</strong> ${idea}<br><strong>Generated:</strong> ${new Date().toLocaleString()}</p>`);
+  lines.push(`<p><strong>Idea:</strong> ${escapeHtml(idea)}<br><strong>Generated:</strong> ${new Date().toLocaleString()}</p>`);
 
   AGENTS.forEach(agent => {
     const data = results[agent.key];
@@ -226,14 +235,14 @@ function downloadReport(idea, results) {
     const verdict = data.verdict || data.project_viability;
     const rec = data.recommendation || data.final_recommendation;
     const summary = data.product_summary || data.core_problem_statement;
-    lines.push(`<div class="agent-block"><h2>${agent.label}</h2>`);
-    if (verdict) lines.push(`<p><strong>Verdict:</strong> ${verdict}</p>`);
-    if (summary) lines.push(`<p>${summary}</p>`);
-    if (rec) lines.push(`<div class="rec-box"><strong>Recommendation:</strong><br>${rec}</div>`);
+    lines.push(`<div class="agent-block"><h2>${escapeHtml(agent.label)}</h2>`);
+    if (verdict) lines.push(`<p><strong>Verdict:</strong> ${escapeHtml(verdict)}</p>`);
+    if (summary) lines.push(`<p>${escapeHtml(summary)}</p>`);
+    if (rec) lines.push(`<div class="rec-box"><strong>Recommendation:</strong><br>${escapeHtml(rec)}</div>`);
     Object.entries(data).forEach(([k, v]) => {
       if (Array.isArray(v) && v.length && k !== "_meta") {
-        lines.push(`<h3>${k.replace(/_/g, " ")} (${v.length})</h3><ul>`);
-        v.forEach(item => lines.push(`<li>${item}</li>`));
+        lines.push(`<h3>${escapeHtml(k.replace(/_/g, " "))} (${v.length})</h3><ul>`);
+        v.forEach(item => lines.push(`<li>${escapeHtml(item)}</li>`));
         lines.push(`</ul>`);
       }
     });
