@@ -430,6 +430,10 @@ export default function Home() {
           animation: shimmer 3s linear infinite;
         }
         .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @media (max-width: 640px) {
+          .results-grid { grid-template-columns: 1fr !important; }
+          .feature-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       <div style={{ minHeight: "100vh", background: "#05050f", color: "white" }}>
@@ -720,7 +724,7 @@ export default function Home() {
 
               {/* Sidebar + main panel */}
               {Object.keys(results).length > 0 && (
-                <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 12, marginBottom: 32 }}>
+                <div className="results-grid" style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 12, marginBottom: 32 }}>
                   {/* Sidebar */}
                   <div style={{
                     background: "#07070f", border: "1px solid #0f0f1c",
@@ -849,7 +853,7 @@ export default function Home() {
 
           {/* Feature cards — shown only when idle */}
           {isIdle && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, paddingBottom: 60 }} className="fade-in">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, paddingBottom: 60 }} className="fade-in feature-grid">
               {[
                 { icon: "◈", title: "Multi-Agent Analysis", desc: "6 specialized agents each contribute a distinct perspective. Business, tech, QA, security, UX, and final spec — all synthesized.", tags: ["BA", "Dev", "QA", "Sec", "UX"] },
                 { icon: "⬡", title: "RAG-Grounded", desc: "Agents retrieve from GDPR, OWASP, and SaaS architecture docs before responding — grounded in real standards, not just training data.", tags: ["GDPR", "OWASP", "SaaS"] },
